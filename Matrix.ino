@@ -15,9 +15,9 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(32, 8, D2,
   NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
   NEO_GRB + NEO_KHZ800);
 
-const char * ssid = "ssid";
-const char * password = "pass";
-
+const char * ssid = "MOVISTAR_BD60";
+const char * password = "7ksUMTPejqdsineg7q74";
+String hora,minu, mes, dia, dow,sstr;
 String IP;
 int diasxadv=0;
 uint8_t chars[96][5]={{0,0,0,0,0},{2,2,2,0,2},{5,5,0,0,0},{5,7,5,7,5},{2,3,6,1,7},{5,1,2,4,5},{2,2,7,6,3},{7,5,7,0,0},{1,2,2,2,1},{4,2,2,2,4},{0,5,2,5,0},{0,2,7,2,0},{0,0,6,2,4},{0,0,7,0,0},{0,0,0,0,2},{1,1,2,4,4},{7,5,5,5,7},{2,6,2,2,7},{7,1,7,4,7},{7,1,7,1,7},{5,5,7,1,1},{7,4,7,1,7},{7,4,7,5,7},{7,1,1,1,1},{7,5,7,5,7},{7,5,7,1,7},{0,2,0,2,0},{0,2,0,2,4},{1,2,4,2,1},{0,7,0,7,0},{4,2,1,2,4},{7,1,7,0,4},{7,5,1,3,3},{2,5,5,7,5},{6,5,6,5,6},{7,4,4,4,7},{6,5,5,5,6},{7,4,6,4,7},{7,4,6,4,4},{7,4,5,5,7},{5,5,7,5,5},{7,2,2,2,7},{7,1,1,1,6},{5,5,6,5,5},{4,4,4,4,7},{5,7,7,7,7},{5,7,7,7,5},{7,5,5,5,7},{7,5,7,4,4},{7,5,5,6,7},{7,5,7,6,5},{7,4,7,1,7},{7,2,2,2,2},{5,5,5,5,7},{5,5,5,5,2},{5,5,7,7,5},{5,5,2,5,5},{5,5,5,2,2},{7,1,2,4,7},{3,2,2,2,3},{4,4,2,1,1},{6,2,2,2,6},{2,5,0,0,0},{0,0,0,0,7},{2,2,0,0,0},{0,3,5,5,3},{4,4,6,5,7},{0,3,4,4,3},{1,1,3,5,7},{7,5,6,4,6},{2,4,6,4,4},{3,5,3,1,3},{4,4,7,5,5},{2,0,2,2,2},{1,1,1,1,2},{4,4,5,6,5},{2,2,2,2,3},{0,5,7,5,5},{0,6,5,5,5},{0,7,5,5,7},{0,6,5,6,4},{0,3,5,3,1},{0,6,5,4,4},{0,3,6,1,7},{2,3,2,2,3},{0,5,5,5,7},{0,5,5,5,2},{0,5,5,7,5},{0,5,2,2,5},{0,5,5,2,4},{0,7,1,2,7},{1,2,6,2,1},{2,2,2,2,2},{4,2,3,2,4},{0,4,3,0,0},{0,0,0,0,0}};
@@ -34,6 +34,11 @@ uint8_t icon_elec[][8][8][3]={{{{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},
 uint8_t bignum[][8]={{30,63,51,51,51,51,63,30},{12,28,12,12,12,12,30,30},{62,63,3,31,62,48,63,63},{62,63,3,30,31,3,63,62},{51,51,51,51,63,63,3,3},{62,62,48,62,63,3,63,62},{30,62,48,62,63,51,63,30},{63,63,3,6,6,12,12,12},{30,63,51,30,63,51,63,30},{30,63,51,63,31,3,31,30},{0,192,192,0,0,192,192,0}};
 WiFiClient client;
 HTTPClient http;
+String watts = "";
+uint8_t ra, ga, ba;
+String mirubeeURL="http://192.168.1.42/en/status.xml";
+
+
 
 void setup() {
   Serial.begin(115200);
@@ -42,7 +47,8 @@ void setup() {
   matrix.begin();
   matrix.setTextWrap(false);
   matrix.setBrightness(32);
-
+  
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   Serial.println("Connecting");
   while (WiFi.status() != WL_CONNECTED) {
@@ -60,38 +66,71 @@ void setup() {
 
 
 void worldclock_time() {
-  String hora,minu, mes, dia, dow;
+
   uint8_t index = 6;
-
   if (WiFi.status() == WL_CONNECTED) {
-    {
-
       http.begin(client,
         "http://worldclockapi.com/api/json/cet/now?callback=mycallback");
-      int httpCode = http.GET();
-      if (httpCode > 0) {
-        if (httpCode == HTTP_CODE_OK) {
-          String sstr = http.getString();
+          int httpCode = http.GET();
+          sstr = http.getString();
+          Serial.println(sstr);
           int a = sstr.indexOf("currentDateTime\"");
-          hora = sstr.substring(a + 29, a + 31);
-          minu = sstr.substring(a + 32, a + 34);
-          dia =  sstr.substring(a + 26, a + 28);
-          mes =  sstr.substring(a + 23, a + 25);
-          dow = sstr.substring(a + 111, a + 113);
+          int b= sstr.indexOf("dayOfTheWeek\"");
+          if (a>0){
+            hora = sstr.substring(a + 29, a + 31);
+            minu = sstr.substring(a + 32, a + 34);
+            dia =  sstr.substring(a + 26, a + 28);
+            mes =  sstr.substring(a + 23, a + 25);
+            dow =  sstr.substring(b+15, b+17);
+            dow.toUpperCase();
+          }
+          http.end();
+    
+  
+      if ((sstr.length()==0)||(sstr.indexOf("unavailable")>0)){
+              http.begin(client,
+        "http://worldtimeapi.org/api/timezone/Europe/Madrid");
 
-          diasxadv=restarFechas(10,4,dia.toInt(),mes.toInt());
-          if (mes.toInt()==2)diasxadv=diasxadv-1;
-          if (mes.toInt()==3)diasxadv=diasxadv+1;
-        }
+
+      int httpCode = http.GET();          
+          sstr = http.getString();
+          int a = sstr.indexOf("datetime\"");
+          if (a>0){
+            hora = sstr.substring(a + 22, a + 24);
+            minu = sstr.substring(a + 25, a + 27);
+            dia =  sstr.substring(a + 19, a + 21);
+            mes =  sstr.substring(a + 16, a + 18);
+            a = sstr.indexOf("day_of_week\"");
+            dow = sstr.substring(a + 13, a + 14);
+            if (dow=="0"){dow="SU";}
+            if (dow=="1"){dow="MO";}
+            if (dow=="2"){dow="TU";}
+            if (dow=="3"){dow="WE";}
+            if (dow=="4"){dow="TH";}
+            if (dow=="5"){dow="FR";}
+            if (dow=="6"){dow="SA";}
+          }
+          http.end();
+          Serial.print("Alternative server:");
+          Serial.println(sstr);
+          
       }
+  }  
 
-      http.end();
-    }
+
+    diasxadv=restarFechas(10,4,dia.toInt(),mes.toInt());
+    if (mes.toInt()==2)diasxadv=diasxadv-1;
+    if (mes.toInt()==3)diasxadv=diasxadv+1;
+    
 
     matrix.clear();
     big_num(hora,1,0,51, 153, 255);
     big_num(minu,18,0,51, 153, 255);
     big_num(":",17,0,51, 153, 255);
+    Serial.print(hora);
+    Serial.print(":");
+    Serial.println(minu);
+ 
     
     for (uint8_t i = 0; i < 5; i++) {
       delay(500);
@@ -100,6 +139,8 @@ void worldclock_time() {
       big_num(":",17,0,51, 153, 255);
     }
     texto_s(dow+" "+ dia + "-" + mes, 0, 2, 0, 0, 255);
+
+    Serial.println(dow+" "+ dia + "-" + mes);
    
     if (hora.toInt()>0 and hora.toInt()<8) {
           matrix.setBrightness(8);
@@ -108,39 +149,41 @@ void worldclock_time() {
         } 
     
     delay(1000);
-  }
+  
 
 
 }
 
 
 void watts_mirubee() {
-  uint8_t ra, ga, ba;
-  String watts = "";
+
+ 
+      Serial.println("Mirubee");
+  
 
   if (WiFi.status() == WL_CONNECTED) {
-
-    http.begin(client, "http://192.168.1.38/en/status.xml?rnd=555"+String(random(0,9999999999)));
+  Serial.println("Connected");
+    
+    http.begin(client,mirubeeURL.c_str() );//?rnd=555"+String(random(0,9999999999)));
 
     int httpCode = http.GET();
-
+  Serial.println(httpCode);
     if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
       String sstr = http.getString();
-      Serial.print("SSTR=");
-      Serial.println(sstr);
 
-      int t1 = sstr.indexOf("<fase4_p_activa>");
-      int t2 = sstr.indexOf("</fase4_p_activa>");
-      watts = sstr.substring(t1 + 16, t2);
-      Serial.print("t1 ");
-      Serial.println(t1);
-      Serial.print("t2 ");
-      Serial.println(t2);
-      int v=(watts.toInt()/4000.0)*255;
-      if (v>255){v=255;}
-      ra=v;
-      ga=255-v;
-      ba=0;
+      Serial.print("SSTR=");
+      Serial.println(sstr.length());
+
+      if (sstr.length()>0){
+          int t1 = sstr.indexOf("<fase1_p_activa>");
+          int t2 = sstr.indexOf("</fase1_p_activa>");
+          watts = sstr.substring(t1 + 16, t2);
+          int v=(watts.toInt()/4000.0)*255;
+          if (v>255){v=255;}
+          ra=v;
+          ga=255-v;
+          ba=0;
+      }
     }
     http.end();
   }
@@ -158,7 +201,7 @@ void forecast() {
 
   if (WiFi.status() == WL_CONNECTED) {
 
-    http.begin(client, "http://api.openweathermap.org/data/2.5/weather?q=Palma&mode=xml&appid=appid&units=metric&type=accurate");
+    http.begin(client, "http://api.openweathermap.org/data/2.5/weather?q=Palma&mode=xml&appid=e808a9fc312bbe9506825f1d1bb66692&units=metric&type=accurate");
 
     int httpCode = http.GET();
 
@@ -169,7 +212,7 @@ void forecast() {
 
       int t1 = sstr.indexOf("temperature") + 19;
       int t2 = (sstr.substring(t1)).indexOf("\"") + t1;
-      celsius = sstr.substring(t1, t2);
+      celsius = sstr.substring(t1, t2-1);
 
 
       t1 = sstr.indexOf("weather") + 7;
@@ -211,6 +254,7 @@ void forecast() {
 
   matrix.clear();
   texto(celsius + "'", 10, 2, ra, ga, ba);
+  Serial.println("WEA="+weather+"_");
   pintaicono(weather);
 }
 
@@ -219,11 +263,6 @@ void loop() {
   forecast();
   watts_mirubee();
   matrix.clear();
-  if (diasxadv>=0){
-    texto_s("XADV:"+String(diasxadv)+"d",0,2,0,255,0);
-    delay(1000);
-  }
-
 }
 
 boolean vaiven(String s, int dela, int repeticiones, uint16_t color, uint16_t back) {
@@ -398,6 +437,7 @@ void pintaicono(String ii) {
   if (ii == "few clouds") n_f = 32;
   if (ii == "scattered clouds") n_f = 32;
   if (ii == "broken clouds") n_f = 16;
+  if (ii == "overcast clouds") n_f = 16;
   if (ii == "shower rain") n_f = 5;
   if (ii == "mist") n_f = 10;
   if (ii == "snow") n_f = 33;
@@ -412,6 +452,7 @@ void pintaicono(String ii) {
         if (ii == "few clouds") matrix.drawPixel(x, y, matrix.Color(icon_312_fewclouds[frame][y][x][0], icon_312_fewclouds[frame][y][x][1], icon_312_fewclouds[frame][y][x][2]));
         if (ii == "scattered clouds") matrix.drawPixel(x, y, matrix.Color(icon_485_scattered[frame][y][x][0], icon_485_scattered[frame][y][x][1], icon_485_scattered[frame][y][x][2]));
         if (ii == "broken clouds") matrix.drawPixel(x, y, matrix.Color(icon_486_broken[frame][y][x][0], icon_486_broken[frame][y][x][1], icon_486_broken[frame][y][x][2]));
+        if (ii == "overcast clouds") matrix.drawPixel(x, y, matrix.Color(icon_486_broken[frame][y][x][0], icon_486_broken[frame][y][x][1], icon_486_broken[frame][y][x][2]));
         if (ii == "shower rain") matrix.drawPixel(x, y, matrix.Color(icon_400_shower[frame][y][x][0], icon_400_shower[frame][y][x][1], icon_400_shower[frame][y][x][2]));
         if (ii == "mist") matrix.drawPixel(x, y, matrix.Color(icon_347_mist[frame][y][x][0], icon_347_mist[frame][y][x][1], icon_347_mist[frame][y][x][2]));
         if (ii == "snow") matrix.drawPixel(x, y, matrix.Color(icon_344_snow[frame][y][x][0], icon_344_snow[frame][y][x][1], icon_344_snow[frame][y][x][2]));
